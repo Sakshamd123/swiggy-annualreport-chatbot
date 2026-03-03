@@ -1,0 +1,41 @@
+# ============================================================
+# Swiggy Annual Report RAG Backend — Python Dependencies
+# ============================================================
+# Python 3.10+ recommended
+
+# ── API Layer ────────────────────────────────────────────────
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+
+# ── LangChain core & integrations ────────────────────────────
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-huggingface>=0.1.0
+langchain-google-genai>=2.0.0
+langchain-text-splitters>=0.3.0
+
+# ── Embedding model (BAAI/bge-large-en-v1.5) ─────────────────
+sentence-transformers>=3.0.0
+huggingface-hub>=0.24.0
+torch>=2.0.0          # CPU-only; for GPU add: torch --index-url https://download.pytorch.org/whl/cu118
+
+# ── Dense vector store ────────────────────────────────────────
+faiss-cpu>=1.7.4
+
+# ── Sparse / keyword retrieval ────────────────────────────────
+rank-bm25>=0.2.2
+
+# ── LLM provider ─────────────────────────────────────────────
+google-generativeai>=0.7.0
+
+# ── Environment variables ─────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── Standard utilities (usually pre-installed) ────────────────
+numpy>=1.24.0
+tqdm>=4.66.0
+
+# ── PDF fallback loader (default to pre-parsed JSONL) ────────
+pypdf>=3.0.0
