@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swiggy Annual Report AI Assistant</title>
+    <meta name="description"
+        content="Ask questions about Swiggy's Annual Report FY24 powered by a Hybrid RAG system with Gemini Flash." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="logo-area">
+                <span class="logo-icon" aria-hidden="true">🧾</span>
+                <div>
+                    <h1 class="site-title">Swiggy Annual Report</h1>
+                    <p class="site-subtitle">AI Research Assistant · FY 2023–24</p>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="main-content">
+
+        <!-- Query Section -->
+        <section class="card query-card" aria-label="Ask a question">
+            <label class="input-label" for="question-input">
+                Ask a question about Swiggy's annual report
+            </label>
+            <div class="input-row">
+                <input id="question-input" type="text" class="question-input"
+                    placeholder="e.g. What was Swiggy's revenue in FY24?" autocomplete="off"
+                    aria-label="Your question" />
+                <button id="ask-btn" class="ask-btn" onclick="handleQuery()">
+                    <span id="btn-text">Ask</span>
+                    <span id="btn-spinner" class="spinner" aria-hidden="true" hidden></span>
+                </button>
+            </div>
+            <p class="hint-text">
+                Queries are grounded strictly in the Swiggy FY24 Annual Report. No hallucinations.
+            </p>
+        </section>
+
+        <!-- Error Banner -->
+        <div id="error-banner" class="error-banner" role="alert" hidden>
+            <span class="error-icon">⚠</span>
+            <span id="error-msg"></span>
+        </div>
+
+        <!-- Answer Section -->
+        <section id="answer-section" class="card answer-card" hidden aria-live="polite">
+
+            <div class="answer-header">
+                <h2 class="section-title">Answer</h2>
+                <div class="meta-chips" id="meta-chips"></div>
+            </div>
+
+            <p id="answer-text" class="answer-text"></p>
+
+            <div class="answer-meta">
+                <div class="meta-item" id="meta-confidence">
+                    <span class="meta-label">Confidence</span>
+                    <span id="confidence-val" class="meta-value"></span>
+                </div>
+                <div class="meta-item" id="meta-pages">
+                    <span class="meta-label">Source Pages</span>
+                    <span id="pages-val" class="meta-value"></span>
+                </div>
+                <div class="meta-item" id="meta-category">
+                    <span class="meta-label">Category</span>
+                    <span id="category-val" class="meta-value"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Context Section -->
+        <section id="context-section" class="card context-card" hidden aria-live="polite">
+            <h2 class="section-title">Supporting Context</h2>
+            <p id="context-text" class="context-text"></p>
+        </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <p>Source: <a href="https://www.bseindia.com/bseplus/AnnualReport/544225/10424544225.pdf" target="_blank"
+                rel="noopener">Swiggy Annual Report FY 2023–24 (BSE)</a></p>
+    </footer>
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>

@@ -31,6 +31,8 @@ from rag.rag.guardrails import validate_and_build_context, FALLBACK_ANSWER, NO_C
 from rag.retrieval.hybrid_retriever import hybrid_retrieve
 from rag.retrieval.reranker import rerank
 from rag.utils.schema import RAGResponse, ClassifiedQuery, QueryCategory
+from rag.query_rewriter import QueryRewriter
+from rag.utils.parent_context import expand_to_parent_context
 
 logger = logging.getLogger(__name__)
 
@@ -145,24 +147,46 @@ def build_rag_chain(
     # ── Internal LLM sub-chain (prompt → LLM → string parser) ────────────
     llm_chain = RAG_PROMPT | llm | StrOutputParser()
 
+    # ── Query Rewriter (lazy-init — shared across requests) ──────────────
+    _rewriter = QueryRewriter()
+
     # ── Step functions ────────────────────────────────────────────────────
 
-    def step_classify(query: str) -> ClassifiedQuery:
-        return classify_query(query)
+    def step_rewrite_and_classify(query: str) -> ClassifiedQuery:
+        """
+        1. Rewrite the query for retrieval (Gemini Flash, no-op on failure).
+        2. Classify the REWRITTEN query for category + table-boost flag.
+        3. Store the ORIGINAL query so it reaches the LLM answer step.
+        """
+        rewritten = _rewriter.rewrite(query)
+        classified = classify_query(rewritten)
+        # Carry original query forward so the LLM answers in the user's words
+        classified.query = rewritten          # used for retrieval
+        classified.__dict__["original_query"] = query  # preserved for LLM
+        return classified
 
     def step_retrieve(classified: ClassifiedQuery) -> Dict[str, Any]:
         retrieved = hybrid_retrieve(
-            query=classified.query,
+            query=classified.query,          # rewritten query → better recall
             faiss_store=faiss_store,
             bm25_index=bm25_index,
             bm25_chunks=bm25_chunks,
             boost_table_chunks=classified.boost_table_chunks,
         )
         reranked = rerank(classified.query, retrieved, top_k=FINAL_TOP_K)
+
+        # ── Parent Document Retrieval ────────────────────────────────────
+        # Expand each retrieved chunk to include surrounding section context.
+        # Guardrails run AFTER this expansion (as required).
+        expanded = expand_to_parent_context(reranked, bm25_chunks)
+
+        # The original user query is used for the LLM answer generation.
+        original_query = classified.__dict__.get("original_query", classified.query)
+
         return {
-            "query":     classified.query,
+            "query":     original_query,     # original → LLM answer
             "category":  classified.category,
-            "retrieved": reranked,
+            "retrieved": expanded,           # expanded context → guardrails
         }
 
     def step_validate(state: Dict[str, Any]) -> Dict[str, Any]:
@@ -245,10 +269,10 @@ def build_rag_chain(
 
     # ── Assemble Runnable sequence ─────────────────────────────────────────
     pipeline = (
-        RunnableLambda(step_classify)
-        | RunnableLambda(step_retrieve)
-        | RunnableLambda(step_validate)
-        | RunnableLambda(step_generate)
+        RunnableLambda(step_rewrite_and_classify)   # Query Rewriting → Classify
+        | RunnableLambda(step_retrieve)              # Retrieval + Parent Expansion
+        | RunnableLambda(step_validate)              # Guardrails (post-expansion)
+        | RunnableLambda(step_generate)              # Single Gemini call
         | RunnableLambda(step_postprocess)
     )
 
