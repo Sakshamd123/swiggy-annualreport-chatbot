@@ -8,39 +8,51 @@ This repository includes both a **CLI interface** and a **FastAPI backend** read
 
 ---
 
-## 🏗️ Architecture
+```mermaid
+graph TD
+    classDef llm fill:#f9e79f,stroke:#f39c12,stroke-width:2px,color:#000;
+    classDef db fill:#aed6f1,stroke:#2e86c1,stroke-width:2px,color:#000;
+    classDef proc fill:#d5f5e3,stroke:#27ae60,stroke-width:2px,color:#000;
+    classDef pipe fill:#e8daef,stroke:#8e44ad,stroke-width:2px,color:#000;
+    classDef ui fill:#fadbd8,stroke:#c0392b,stroke-width:2px,color:#000;
 
-```text
-USER QUERY
-    │
-    ▼
-┌─────────────────────────────────┐
-│   Query Classifier (rule-based) │  ← Detects: financial / governance / general
-└─────────────────┬───────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────────────┐
-│           Hybrid Retriever                          │
-│  FAISS Dense (Top-5)  +  BM25 Sparse (Top-5)        │
-│  ──── Reciprocal Rank Fusion (RRF) ────             │
-│  Deduplicate → Optional Table Boost → Top-6         │
-└─────────────────┬───────────────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────────────┐
-│   Context Validator (Anti-Hallucination Guardrails) │
-│   • Score threshold check (MIN_RELEVANCE_SCORE)     │
-│   • Safe fallback: "Not found in the annual report."│
-│   • Confidence label: High / Medium / Low           │
-└─────────────────┬───────────────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────┐
-│   Gemini 1.5/2.5 Flash          │  ← SINGLE LLM call, temperature=0
-└─────────────────┬───────────────┘
-                  │
-                  ▼
-          Final Grounded Answer (with citations & confidence)
+    %% Ingestion Pipeline
+    subgraph "1. Document Ingestion (Offline)"
+        PDF(Swiggy FY24 PDF):::ui -->|Docling processing| JSONL[Structured JSONL]
+        JSONL --> CHUNK[Semantic Chunking<br>Markdown tables preserved]:::proc
+        CHUNK -->|Text + Metadata| EMB[BGE-Large-En-v1.5<br>Dense Embeddings]:::proc
+        CHUNK -->|Keywords| BM25_TOK[BM25 Tokenizer]:::proc
+        EMB --> FAISS[(FAISS<br>Vector Store)]:::db
+        BM25_TOK --> BM25[(BM25<br>Sparse Index)]:::db
+    end
+
+    %% Retrieval Pipeline
+    subgraph "2. Live RAG Pipeline (Online)"
+        QUERY([User Query]):::ui --> REWRITE[Query Rewriter<br>Gemini Flash]:::llm
+        
+        REWRITE -->|Expanded Keywords| CLASSIFY[Query Classifier<br>Financial / Governance]:::proc
+        REWRITE -.->|Original Query| LLM
+        
+        CLASSIFY -->|Boost tables via metadata?| RETRIEVAL
+        
+        subgraph "Hybrid Retrieval System"
+            RETRIEVAL[Retriever] --> FAISS
+            RETRIEVAL --> BM25
+            FAISS -->|Top-5| RRF[Reciprocal Rank<br>Fusion]:::pipe
+            BM25 -->|Top-5| RRF
+            RRF -->|Deduplicate & Rerank| CHUNKS(Top-6 Chunks)
+        end
+        
+        CHUNKS --> PARENT[Parent Document Retrieval<br>Expand chunk to full section]:::proc
+        
+        PARENT --> GUARD[Guardrails<br>MIN_RELEVANCE_SCORE]:::pipe
+        
+        GUARD -->|Score Pass| LLM[LLM Generation<br>Gemini Flash]:::llm
+        GUARD -->|Score Fail| REJECT[Fallback:<br>'Not found in annual report']:::ui
+        
+        LLM --> CLEAN[Output Cleaner<br>Decodes HTML & splits run-ons]:::proc
+        CLEAN --> ANS([Final Grounded Answer<br>with Citations & Confidence]):::ui
+    end
 ```
 
 ---
