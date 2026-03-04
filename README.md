@@ -1,6 +1,6 @@
 ---
 title: Swiggy Annual Report Chatbot
-emoji: 🍔
+emoji: 
 colorFrom: blue
 colorTo: green
 sdk: docker
@@ -52,23 +52,9 @@ USER QUERY
 
 ---
 
-## 📊 Benchmark Summary
+## 🌐 Live Demo & Source Code
 
-The system is continuously tested against a benchmark suite of 15 queries covering Financial, Governance, and General facts from the 170-page un-embedded report.
-
-- **Total Queries**: 15
-- **Top-5 Accuracy**: 80.0%
-- **Top-1 Accuracy**: 53.3%
-- **Mean Reciprocal Rank (MRR)**: ~0.60
-- **Avg Latency (Retrieval)**: ~90-100ms
-- **Guardrail Blocks**: 0 Hallucinations
-
-*Governance queries consistently achieve 80-100% Top-5 accuracy.*
-
----
-
-## 📂 Data & Source Code
-
+- **Live App (Hugging Face Spaces)**: [https://huggingface.co/spaces/saksham-ds/swiggy_rag](https://huggingface.co/spaces/saksham-ds/swiggy_rag)
 - **GitHub Repository**: [Sakshamd123/swiggy-annualreport-chatbot](https://github.com/Sakshamd123/swiggy-annualreport-chatbot)
 - **Official Source**: [Swiggy Annual Report FY 2023–24 (PDF)](https://www.bseindia.com/bseplus/AnnualReport/544225/10424544225.pdf)
 - **Extracted Form**: Structured JSONL (`data/swiggy_multimodal.jsonl`) generated via Docling. 
@@ -140,19 +126,11 @@ curl -X 'POST' \
 
 ---
 
-## 🧪 Testing
 
-To run the benchmarking suite (evaluates retrieval accuracy over 15 financial/governance baseline questions against the current indices):
-
-```bash
-python tests/benchmark.py
-```
-
----
 
 ## 💻 CLI Mode
 
-You can also interact directly with the backend via terminal:
+You can also interact directly with the backend via terminal. The results will be printed directly to your console, including the answer, confidence score, and source pages.
 
 **Interactive mode:**
 ```bash
@@ -162,6 +140,17 @@ python -m rag.main
 **Single-query mode:**
 ```bash
 python -m rag.main --query "Who are the statutory auditors?"
+```
+
+**Example CLI Output:**
+```text
+Question: Who are the statutory auditors?
+
+Answer          : The statutory auditors of Swiggy Limited are Deloitte Haskins & Sells.
+Confidence      : HIGH
+Category        : GOVERNANCE
+Source Pages    : Pages 106-107
+--------------------------------------------------
 ```
 
 ---
