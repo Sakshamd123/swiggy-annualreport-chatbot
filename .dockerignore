@@ -1,0 +1,18 @@
+# Don't send these to Docker build context
+.env
+.venv
+env/
+venv/
+__pycache__/
+*.py[cod]
+.git/
+.gitignore
+vectorstore/
+*.txt
+*.md
+.vscode/
+.idea/
+tests/
+inspect_jsonl.py
+refactor.py
+render.yaml
