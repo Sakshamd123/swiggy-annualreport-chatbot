@@ -67,8 +67,9 @@ The system is continuously tested against a benchmark suite of 15 queries coveri
 
 ---
 
-## 📂 Data Source
+## 📂 Data & Source Code
 
+- **GitHub Repository**: [Sakshamd123/swiggy-annualreport-chatbot](https://github.com/Sakshamd123/swiggy-annualreport-chatbot)
 - **Official Source**: [Swiggy Annual Report FY 2023–24 (PDF)](https://www.bseindia.com/bseplus/AnnualReport/544225/10424544225.pdf)
 - **Extracted Form**: Structured JSONL (`data/swiggy_multimodal.jsonl`) generated via Docling. 
 - **PDF Fallback**: The system defaults to the JSONL for 100% accurate table structures, but contains fallback logic inside `rag/ingestion/` to automatically load and parse the PDF if the JSONL is missing.
@@ -103,16 +104,18 @@ python -m rag.main --index
 
 ---
 
-## 🌐 FastAPI Layer
+## ⚡ Quick Start (UI & API)
 
-Start the API server:
+Start the FastAPI server to access the modern web UI and API endpoints:
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-The API runs at `http://localhost:8000`. You can view the automated Swagger documentation at `http://localhost:8000/docs`.
+Next, open your browser and navigate to **[http://localhost:8000](http://localhost:8000)** to use the chat interface.
 
 ### API Usage Example
+
+The API runs at `http://localhost:8000/api/v1/query`. Automated Swagger docs are at `http://localhost:8000/docs`.
 
 **Request:**
 ```bash
@@ -133,6 +136,16 @@ curl -X 'POST' \
   "source_pages": "Pages 3-4",
   "context_snippet": "..."
 }
+```
+
+---
+
+## 🧪 Testing
+
+To run the benchmarking suite (evaluates retrieval accuracy over 15 financial/governance baseline questions against the current indices):
+
+```bash
+python tests/benchmark.py
 ```
 
 ---
