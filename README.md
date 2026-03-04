@@ -1,3 +1,12 @@
+---
+title: Swiggy Annual Report Chatbot
+emoji: 🍔
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # Swiggy Annual Report RAG System
 
 A **production-grade** Retrieval-Augmented Generation (RAG) system that answers questions strictly grounded in Swiggy's Annual Report FY24. 
