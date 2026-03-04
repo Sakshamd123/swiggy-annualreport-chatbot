@@ -1,11 +1,4 @@
----
-title: Swiggy Annual Report Chatbot
-emoji: 
-colorFrom: blue
-colorTo: green
-sdk: docker
-pinned: false
----
+
 
 # Swiggy Annual Report RAG System
 
